@@ -5,14 +5,15 @@ from pymongo import MongoClient,UpdateOne
 class DataCrawler:
 
     def __init__(self):
-        self.db = MongoClient('mongodb://127.0.0.1:27017')['quant'] #quant is the name of database
+        self.db = MongoClient('mongodb://127.0.0.1:27017')['Tushare_Quant_stock'] #quant is the name of database
 
 
 
-    def crawl_index(self,begin_date = None, end_date = None):
+    def crawl_index(self,begin_date = None, end_date = None): #抓取周期内指数数据
 
-        #codes = ['000001','000300','399001','399005','399006']
-        codes = ['000001']
+        codes = ['000001','000300','399001','399005','399006']
+        #上证，深证，深证成指，中小板，创业板
+        #codes = ['000001']
 
         for code in codes:
             df_daily = ts.get_k_data(code,index=True,start = begin_date,end = end_date)
@@ -32,7 +33,7 @@ class DataCrawler:
                 doc['code'] = code
 
 
-                #print(doc, flush=True)
+               # print(doc, flush=True)
 
                 #update into database
                 updates_requests.append(
@@ -56,7 +57,7 @@ class DataCrawler:
                 #upsearted_count: new records
                 #modified: new changed records
                 print('Saving daily index data, inserted: ',
-                      updates_results.upserted_count, 'code: ', code, 'modified: ',updates_results.modified_count)
+                      updates_results.upserted_count, 'code: ', code, 'modified: ',updates_results.modified_count,flush=True)
 
                 '''
                 { "_id" : ObjectId("5cb37e8f72694a6060a7abef"), "code" : "000001", "date" : "2019-04-01",
@@ -68,11 +69,14 @@ class DataCrawler:
 
 
     def crawl_stock(self, autype = None, begin_date = None, end_date = None):
-        '''
-        df_stock = ts.get_stock_basics()
-        codes = list(df_stock.index)
-        '''
-        codes = ['000001','600000']
+                        #autype=none = 不复权
+
+        df_stock = ts.get_stock_basics()   #获取所有股票基本信息
+        codes = list(df_stock.index)       #获取所有股票代码，以list的形式
+
+
+
+        #codes = ['000001','600000']
         for code in codes:
             df_daily = ts.get_k_data(code, autype = autype,
                                      start = begin_date,end = end_date)
@@ -92,7 +96,7 @@ class DataCrawler:
                 doc['code'] = code
 
 
-                #print(doc, flush=True)
+               # print(doc, flush=True)
 
                 #update into database
                 updates_requests.append(
@@ -114,7 +118,7 @@ class DataCrawler:
 
                 #upsearted_count: new records
                 #modified: new changed records
-                print('Saving daily index data, inserted: ',
+                print('Saving daily（including hfq) index data, inserted: ',
                       updates_results.upserted_count, 'code: ', code, 'modified: ',updates_results.modified_count)
 
 
@@ -126,6 +130,23 @@ class DataCrawler:
 
 if __name__ == '__main__':
     dc = DataCrawler()
-    #dc.crawl_index(begin_date='2019-04-01', end_date='2019-04-07')
-    dc.crawl_stock(begin_date='2019-04-01', end_date='2019-04-07')
-    dc.crawl_stock(autype = 'hfq',begin_date='2019-04-01', end_date='2019-04-07')
+    #dc.crawl_index(begin_date='2015-01-01', end_date='2015-01-31')
+    dc.crawl_stock(begin_date='2015-01-01', end_date='2015-01-31')
+    dc.crawl_stock(autype = 'hfq',begin_date='2015-01-01', end_date='2015-01-31')
+
+
+
+
+
+
+'''
+MongoDB: notes
+
+
+show databases
+use xxxx
+show collections
+db.daily.find()
+
+db.daily.count()
+'''
